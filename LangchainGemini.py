@@ -4,7 +4,7 @@ import streamlit as st
 import os
 from PIL import Image
 import google.generativeai as genai
-GOOGLE_API_KEY= "AIzaSyBrn98iuD4hBluCFl01TNkRJMB98LKCjxk"
+GOOGLE_API_KEY= "MyGeminiKey"
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model=genai.GenerativeModel("gemini-pro-vision")
