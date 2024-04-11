@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Help</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* Styles for navigation menu */
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="http://127.0.0.1:5000/">Home</a>
+        <a href="http://127.0.0.1:5000/paymentTracker">Payment Tracker</a>
+        <a href="http://127.0.0.1:5000/fetchLLMHistory">Comparision History</a>
+        <a href="http://127.0.0.1:5000/fetchManualReview">Manual Review History</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </div>
+
+    <div class="container">
+        <h1>Application Help</h1>
+        <p>This application is used for comparing invoices and purchase orders. Here's how it works:</p>
+        <ol>
+            <li>Users upload both the invoice and purchase order documents in PDF format.</li>
+            <li>The application extracts text data from the uploaded documents using Google Document AI.</li>
+            <li>The extracted text data is then sent to the Gemini LLM Module for comparison.</li>
+            <li>The LLM module compares the data from the invoice and purchase order based on items and total amounts.</li>
+            <li>If there are no discrepancies, the user can process the payment directly.</li>
+            <li>If discrepancies are found, the user can send the documents for manual review.</li>
+            <li>During manual review, the user can add comments and decide whether to proceed with the payment or not.</li>
+        </ol>
+        <p>If you encounter any issues or need further assistance, please contact the support team.</p>
+    </div>
+</body>
+
+</html>

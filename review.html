@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Review</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Your existing CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+        }
+        h1 {
+            text-align: center;
+        }
+        p {
+            line-height: 1.5;
+        }
+        .review-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        .review-form label {
+            margin-bottom: 0.5rem;
+        }
+        #reviewer_notes {
+            width: 50%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+        }
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Styles for navigation menu */
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- Navigation menu -->
+    <div class="navbar">
+        <a href="http://127.0.0.1:5000/">Home</a>
+        <a href="http://127.0.0.1:5000/paymentTracker">Payment Tracker</a>
+        <a href="http://127.0.0.1:5000/fetchLLMHistory">Comparision History</a>
+        <a href="http://127.0.0.1:5000/fetchManualReview">Manual Review History</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </div>
+
+
+    <h1>Sent for Manual Review</h1>
+    <p>A discrepancy was found between the uploaded invoice and purchase order. Please review the details below and take necessary actions.</p>
+    <p><b>Invoice Details:</b></p>
+    <p><b>Invoice Number:</b> {{ request.args.get('invoice_no') }}</p>
+    <p><b>Invoice Total:</b> {{ request.args.get('invoice_total') }}</p>
+    <p><b>Vendor Name:</b> {{ request.args.get('vendor_name') }}</p>
+    <p><b>Purchase Order Details:</b></p>
+    <p><b>PO Number:</b> {{ request.args.get('po_no') }}</p>
+    <p><b>PO Total:</b> {{ request.args.get('po_total') }}</p>
+    <p><b>Comparison Message:</b> {{ request.args.get('comparison_message') }}</p>
+    <form class="review-form" action="/submitReview" method="post" id="reviewForm">
+        <input type="hidden" name="invoice_no" value="{{ request.args.get('invoice_no')  }}">
+        <input type="hidden" name="invoice_total" value="{{ request.args.get('invoice_total') }}">
+        <input type="hidden" name="vendor_name" value="{{ request.args.get('vendor_name')  }}">
+        <input type="hidden" name="po_no" value="{{ request.args.get('po_no') }}">
+        <input type="hidden" name="po_total" value="{{ request.args.get('po_total') }}">
+        <input type="hidden" name="comparison_message" value="{{ request.args.get('comparison_message')  }}">
+        <label for="reviewer_notes">Reviewer Notes:</label>
+        <textarea name="reviewer_notes" id="reviewer_notes" rows="5"></textarea>
+        <br>
+        <button type="button" id="submitReviewButton">Submit Review</button>
+    </form>
+    
+    <div id="overlay" class="overlay">
+        <div class="popup">
+            <span id="closeButton" class="close">&times;</span>
+            <p id="responseMessage"></p>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById("submitReviewButton").addEventListener("click", function() {
+            var form = document.getElementById("reviewForm");
+            var formData = new FormData(form);
+    
+            fetch("/submitReview", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                var overlay = document.getElementById("overlay");
+                var responseMessage = document.getElementById("responseMessage");
+                responseMessage.innerText = data.message;
+                overlay.style.display = "block"; // Show the overlay
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    
+        // Close the popup when the close button is clicked
+        document.getElementById("closeButton").addEventListener("click", function() {
+            var overlay = document.getElementById("overlay");
+            overlay.style.display = "none"; // Hide the overlay
+        });
+    </script>
+    
+
+   
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review History</title>
+    <style>
+        /* Styles for navigation menu */
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        /* Table styles */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+     <!-- Navigation menu -->
+     <div class="navbar">
+        <a href="http://127.0.0.1:5000/">Home</a>
+        <a href="http://127.0.0.1:5000/paymentTracker">Payment Tracker</a>
+        <a href="http://127.0.0.1:5000/fetchLLMHistory">Comparision History</a>
+        <a href="http://127.0.0.1:5000/fetchManualReview">Manual Review History</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </div>
+    <h1>Review History</h1>
+    <div>
+        <form id="searchForm" action="/searchManualReview" method="POST">
+            <input type="text" id="searchInput" name="searchQuery" placeholder="Invoice No.or PO No.">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <li></li>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Invoice Number</th>
+                <th>Invoice Total</th>
+                <th>Vendor Name</th>
+                <th>PO Number</th>
+                <th>PO Total</th>
+                <th>Comparison Message</th>
+                <th>Reviewer Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+            <tr>
+                <td>{{ review.id }}</td>
+                <td>{{ review.invoice_no }}</td>
+                <td>{{ review.invoice_total }}</td>
+                <td>{{ review.vendor_name }}</td>
+                <td>{{ review.po_no }}</td>
+                <td>{{ review.po_total }}</td>
+                <td>{{ review.comparison_message }}</td>
+                <td>{{ review.reviewer_notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

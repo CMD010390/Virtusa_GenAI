@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Invoice and Purchase Order</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Add custom CSS for styling */
+        .upload-form {
+            display: table;
+            width: 100%;
+        }
+
+        .upload-form .form-group {
+            display: table-row;
+        }
+
+        .upload-form .form-group label,
+        .upload-form .form-group input[type="file"] {
+            display: table-cell;
+            padding: 10px;
+        }
+
+        .upload-form .form-group input[type="file"] {
+            width: 100%;
+        }
+
+        .upload-form .button {
+            display: block;
+            margin: 20px auto;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-form .button:hover {
+            background-color: #45a049;
+        }
+        /* Styles for navigation menu */
+        .navbar {
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+         .overlay .loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body class="upload">
+    <!-- Navigation menu -->
+    <div class="navbar">
+        <a href="http://127.0.0.1:5000/">Home</a>
+        <a href="http://127.0.0.1:5000/paymentTracker">Payment Tracker</a>
+        <a href="http://127.0.0.1:5000/fetchLLMHistory">Comparision History</a>
+        <a href="http://127.0.0.1:5000/fetchManualReview">Manual Review History</a>
+        <a href="{{ url_for('help_page') }}">Help</a>
+    </div>  
+    <h1>Compare Invoice and Purchase Order</h1>
+    <div class="message-container">
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for category, messages in messages %}
+                        <li class="{{ category }}">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data" class="upload-form" onsubmit="clearComparisonResult()">
+                <div class="form-group">
+                    <label for="invoice">Select Invoice (PDF):</label>
+                    <input type="file" name="invoice" id="invoice" accept=".pdf">
+                </div>
+                <div class="form-group">
+                    <label for="purchase_order">Select Purchase Order (PDF):</label>
+                    <input type="file" name="purchase_order" id="purchase_order" accept=".pdf">
+                </div>
+                <button type="submit" class="button">Compare</button>
+            </form>
+        </div>
+        <div id="loadingIndicator" style="display: none;">
+            <img src="{{ url_for('static', filename='loading_spinner.gif') }}" alt="Loading..." />
+        </div>
+        <script>
+            // JavaScript to show the loading spinner when the form is submitted
+            document.getElementById("uploadForm").addEventListener("submit", function() {
+                // Show the loading spinner
+                document.getElementById("loadingIndicator").style.display = "block";
+            });
+        </script>
+
+        <div class="right-panel">
+            {% if success is defined %}
+                {% if success %}
+                    <p>Files Compared successfully!</p>
+                    <ul class="comparison-list">
+                        <li>
+                            
+                            <div class="comparison-container">
+                                <p><strong>Invoice Number:</strong> {{ Invoice_no }}</p>
+                                <p><strong>Invoice Total:</strong> {{ Invoice_Total }}</p>
+                                <p><strong>PO Number:</strong> {{ PO_no }}</p>
+                                <p><strong>PO Total:</strong> {{ PO_Total }}</p>
+                                <p><strong>Comparison:</strong></p>
+                                <ul class="comparison-list">
+                                    
+                                        <li>{{ comparison_result }}</li>
+                                   
+                                </ul>
+                            </div>
+                           
+                        </li>
+                    </ul>
+                    <div class="action-buttons">
+                     {% if not discrepencyFlag %}
+                        <form id="paymentForm" method="post">
+                            <input type="hidden" name="invoice_total" value="{{ Invoice_Total }}">
+                            <input type="hidden" name="Invoice_no" value="{{ Invoice_no }}">
+                            <input type="hidden" name="Invoice_Vendor" value="{{ Invoice_Vendor }}">
+                            <input type="hidden" name="Invoice_DueDate" value="{{ Invoice_DueDate }}">
+                            <input type="hidden" name="PO_no" value="{{ PO_no }}">
+                            <input type="hidden" name="PO_Total" value="{{ PO_Total }}">
+                            <button id="submitButton" type="button" class="button">Process Payment {{ Invoice_Total }}</button>
+                        </form>
+                    {% endif %}
+
+                        <div id="overlay" class="overlay">
+                            <div class="popup">
+                                <span id="closeButton" class="close">&times;</span>
+                                <p id="responseMessage"></p>
+                            </div>
+                        </div>
+                        <script>
+                            function clearComparisonResult() {
+                                // Clear the HTML elements that display the comparison result
+                                var comparisonContainer = document.querySelector('.right-panel');
+                                if (comparisonContainer) {
+                                    comparisonContainer.innerHTML = ''; // Clear the contents
+                                }
+                            }
+                        </script>
+                        <script>
+                            // Get the modal
+                            var modal = document.getElementById("responseModal");
+                        
+                            // Get the <span> element that closes the modal
+                            var span = document.getElementsByClassName("close")[0];
+                        
+                            document.getElementById("submitButton").addEventListener("click", function() {
+                                var form = document.getElementById("paymentForm");
+                                var formData = new FormData(form);
+
+                                fetch("http://127.0.0.1:5000/approvePayment", {
+                                    method: "POST",
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    var overlay = document.getElementById("overlay");
+                                    var responseMessage = document.getElementById("responseMessage");
+                                    responseMessage.innerText = data.message;
+                                    overlay.style.display = "block"; // Show the overlay
+                                })
+                                .catch(error => console.error("Error:", error));
+                            });
+
+                            // Close the popup when the close button is clicked
+                            document.getElementById("closeButton").addEventListener("click", function() {
+                                var overlay = document.getElementById("overlay");
+                                overlay.style.display = "none"; // Hide the overlay
+                            });
+                        </script>
+                        {% if discrepencyFlag %}
+                        {% if discrepencyFlag %}
+                        <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}" class="button">Send for Manual Review</a>
+                    {% endif %}
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p>Files uploaded, but there was a discrepancy. Please review manually.</p>
+                    {% if discrepencyFlag %}
+                    {% if discrepencyFlag %}
+                    <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}" class="button">Send for Manual Review</a>
+                {% endif %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

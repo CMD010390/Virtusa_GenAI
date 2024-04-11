@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function showPaymentMethodDetails(method) {
+            const creditCardDetails = document.getElementById("credit_card_details");
+            const bankTransferDetails = document.getElementById("bank_transfer_details");
+
+            if (method === "credit_card") {
+                creditCardDetails.style.display = "block";
+                bankTransferDetails.style.display = "none";
+            } else if (method === "bank_transfer") {
+                creditCardDetails.style.display = "none";
+                bankTransferDetails.style.display = "block";
+            } else {
+                // Hide both if not a valid method
+                creditCardDetails.style.display = "none";
+                bankTransferDetails.style.display = "none";
+            }
+        }
+
+        // Show credit card fields by default
+        window.onload = function() {
+            showPaymentMethodDetails("credit_card");
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="centered-content">
+            <h1>Payment Confirmation</h1>
+            <p>The invoice and purchase order have been compared and verified. Proceed with the payment:</p>
+            <div class="invoice-details">
+                <p>Invoice Total to be Paid: 
+                    {% if request.form.get('invoice_total') is defined %}
+                        {{ request.form.get('invoice_total') }}
+                    {% else %}
+                        Information not available
+                    {% endif %}
+                </p>
+                <p>For Vendor: 
+                    {% if request.form.get('Invoice_Vendor') is defined %}
+                        {{ request.form.get('Invoice_Vendor') }}
+                    {% else %}
+                        Information not available
+                    {% endif %}
+                </p>
+            </div>
+            <form method="POST" action="payment_process" class="payment-form">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method" id="payment_method" onchange="showPaymentMethodDetails(this.value)">
+                    <option value="credit_card">Credit Card</option>
+                    <option value="debit_card">Debit Card</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                </select>
+                <br>
+                <div id="credit_card_details" style="display: block;">
+                    <label for="card_number">Card Number:</label>
+                    <input type="text" name="card_number" id="card_number" required style="width: 100%">  <br>
+                    <label for="expiry_date">Expiry Date (MM/YY):</label>
+                    <input type="text" name="expiry_date" id="expiry_date" required style="width: 50%">  <br>
+                    <label for="cvv">CVV:</label>
+                    <input type="text" name="cvv" id="cvv" required style="width: 50%">  <br>
+                </div>
+                <div id="bank_transfer_details" style="display: none;">
+                    <label for="account_number">Account Number:</label>
+                    <input type="text" name="account_number" id="account_number" required style="width: 100%">  <br>
+                    <label for="routing_number">Routing Number:</label>
+                    <input type="text" name="routing_number" id="routing_number" required style="width: 100%">  <br>
+                </div>
+                <br>
+                <button type="submit" class="green-button">Submit Payment</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
