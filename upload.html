@@ -69,6 +69,11 @@
             color: white;
             font-size: 24px;
         }
+        .comparison-scroll-container {
+            max-height: 200px; /* Adjust the height as needed */
+            max-width: 800px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="upload">
@@ -88,7 +93,7 @@
                     {% for category, messages in messages %}
                         <li class="{{ category }}">
                             {% for message in messages %}
-                                {{ message }}
+                                {{ message | safe }}
                             {% endfor %}
                         </li>
                     {% endfor %}
@@ -96,6 +101,7 @@
             {% endif %}
         {% endwith %}
     </div>
+    
 
     <div class="container">
         <div class="left-panel">
@@ -135,11 +141,19 @@
                                 <p><strong>PO Number:</strong> {{ PO_no }}</p>
                                 <p><strong>PO Total:</strong> {{ PO_Total }}</p>
                                 <p><strong>Comparison:</strong></p>
-                                <ul class="comparison-list">
-                                    
-                                        <li>{{ comparison_result }}</li>
-                                   
-                                </ul>
+                                {% if isFraudDetected %}
+                                <p style="color: red;">"Potential Fraud detected " {{fraudMessage}}</p>
+                                {% endif %}
+                                {% if discrepencyFlag %}
+                                <p style="color: red;">"The system has detected a discrepancy.</p>
+                                {% endif %}
+                                <div class="comparison-scroll-container">
+                                    <ul class="comparison-list">
+                                        <pre>
+                                            <li>{{ comparison_result }}</li>
+                                        </pre>
+                                    </ul>
+                                </div>
                             </div>
                            
                         </li>
@@ -205,7 +219,7 @@
                         </script>
                         {% if discrepencyFlag %}
                         {% if discrepencyFlag %}
-                        <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}" class="button">Send for Manual Review</a>
+                        <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}&invoice_dueDate={{Invoice_DueDate}}" class="button">Send for Manual Review</a>
                     {% endif %}
                         {% endif %}
                     </div>
@@ -213,7 +227,7 @@
                     <p>Files uploaded, but there was a discrepancy. Please review manually.</p>
                     {% if discrepencyFlag %}
                     {% if discrepencyFlag %}
-                    <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}" class="button">Send for Manual Review</a>
+                    <a href="{{ url_for('review_page') }}?invoice_no={{ Invoice_no }}&invoice_total={{ Invoice_Total }}&vendor_name={{ Invoice_Vendor }}&po_no={{ PO_no }}&po_total={{ PO_Total }}&comparison_message={{ comparison_result }}&invoice_dueDate={{Invoice_DueDate}}" class="button">Send for Manual Review</a>
                 {% endif %}
                     {% endif %}
                 {% endif %}
