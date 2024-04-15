@@ -15,7 +15,7 @@ genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
 
 model = ChatGoogleGenerativeAI(model="gemini-pro",
-                               temperature=0.4)
+                               temperature=0)
 
 def extract_InvoiceDataLLM(invoice_text):
 
@@ -32,7 +32,7 @@ def extract_InvoiceDataLLM(invoice_text):
      Expected output : remove any dollar symbols {{"Invoice no.":"1001329", 
     "Description":"Office Chair", "Quantity":"2", "Date":"05/01/2022", 
     "Unit price":"1100.00", "Amount":"2200.00"}}{{"Total":"2200.00", "email":"hatwar.dinesh@gmail.com", "phone number":"9999999999",
-    "Address":"Mumbai , India"}}
+    "Address":"Mumbai , India", "Due Date": "15/12/2024", "Vendor" : "Icon Office Suppliers"}}
     '''
     )
 
@@ -61,7 +61,7 @@ def extract_PurchaseOrderDataLLM(purchase_order_text):
      Expected output : remove any dollar symbols {{"PO no.":"1001329", 
     "Description":"Office Chair", "Quantity":"2", "Date":"05/01/2022", 
     "Unit price":"1100.00", "Amount":"2200.00"}}{{"Total":"2200.00", "email":"hatwar.dinesh@gmail.com", "phone number":"9999999999",
-    "Address":"Mumbai , India"}}
+    "Address":"Mumbai , India",  "Vendor" : "Icon Office Suppliers"}}
     '''
     )
 
@@ -79,8 +79,14 @@ def extract_Invoice_PO_Compar_DataLLM(purchase_order_LLMtext, invoice_LLMtext):
 
     prompt = ChatPromptTemplate.from_template(
       
-        '''Here's an text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n Are there any discrepancies in quantity of item, number of items or total between the invoice and purchase order?'''
-    )
+       #'''Here's an text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n Are there any discrepancies in quantity of item, number of items or total between the invoice and purchase order?'''
+         '''Here's a text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n 
+        Are there any discrepancies w.r.t below:
+        * Number of items matching?
+        * Product/Service Description Match?
+        # quantities are matching?
+        * Total is matching?'''
+     )
 
     output_parser = StrOutputParser()
 
@@ -91,6 +97,48 @@ def extract_Invoice_PO_Compar_DataLLM(purchase_order_LLMtext, invoice_LLMtext):
 
     return response
 
+
+#Detect any fraud discrepencies
+def detect_Fraud_DataLLM(purchase_order_LLMtext, invoice_LLMtext):
+
+    prompt = ChatPromptTemplate.from_template(
+      
+       #'''Here's an text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n Are there any discrepancies in quantity of item, number of items or total between the invoice and purchase order?'''
+         '''Here's a text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n 
+        Are there any Potential fraud detection in the following:
+        * Unusual writing style, grammatical errors, or unprofessional language in Invoice?
+        Expected output:
+        {{"isFraudDetected": "True"}}
+        '''
+     )
+
+    output_parser = StrOutputParser()
+
+    chain = prompt | model | output_parser
+ 
+    response = chain.invoke({"invoice_LLMtext": invoice_LLMtext, "purchase_order_LLMtext": purchase_order_LLMtext })
+    print("Fraud detection response is ==>>  " + response)
+
+    return response
+
+def extract_Invoice_PO_ComparFlag_LLM(purchase_order_LLMtext, invoice_LLMtext):
+
+    prompt = ChatPromptTemplate.from_template(
+      
+       #'''Here's an text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n Are there any discrepancies in quantity of item, number of items or total between the invoice and purchase order?'''
+        '''Here's an text invoice:\n {invoice_LLMtext} \n and a purchase order:\n {purchase_order_LLMtext} \n Are there any discrepancies in number of items or total between the invoice and purchase order? Then send discrepencyFlag as True or False
+        Expected output:
+        {{"discrepencyFlag": "True"}}'''
+    )
+
+    output_parser = StrOutputParser()
+
+    chain = prompt | model | output_parser
+ 
+    response = chain.invoke({"invoice_LLMtext": invoice_LLMtext, "purchase_order_LLMtext": purchase_order_LLMtext })
+    print("Print Comaprision flag ==>>  " + response)
+
+    return response
 
 def extract_Invoice_PO_DetailLLM(purchase_order_LLMtext, invoice_LLMtext):
 
